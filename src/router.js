@@ -1,10 +1,13 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 import Home from './views/Home.vue'
+import Login from './views/Login.vue'
+import Obs from './views/Obs.vue'
+import store from './store';
 
 Vue.use(Router)
 
-export default new Router({
+let router =  new Router({
   mode: 'history',
   base: process.env.BASE_URL,
   routes: [
@@ -20,6 +23,33 @@ export default new Router({
       // this generates a separate chunk (about.[hash].js) for this route
       // which is lazy-loaded when the route is visited.
       component: () => import(/* webpackChunkName: "about" */ './views/About.vue')
+    },
+    {
+      path: '/login',
+      name: 'login',
+      component: Login
+    },
+    {
+      path: '/obs',
+      name: 'obs',
+      component: Obs,
+      meta: {
+        requiresAuth: true
+      }
     }
   ]
 })
+
+router.beforeEach((to, from, next) => {
+  if(to.matched.some(record => record.meta.requiresAuth)){
+    if(store.getters.isLoggedIn){
+      next()
+      return
+    }
+    next('/login')
+  } else {
+    next()
+  }
+})
+
+export default router
