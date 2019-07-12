@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import axios from 'axios'
+import jwt from 'jsonwebtoken'
 
 Vue.use(Vuex)
 
@@ -160,7 +161,7 @@ export default new Vuex.Store({
               icon: 'done',
               color: 'success'
             })
-            commit('SetLoadingStatus', false)
+            commit('setLoadingStatus', false)
             resolve(resp)
           }
         })
@@ -194,6 +195,69 @@ export default new Vuex.Store({
           reject('El Back End no está corriendo')
         })
       })
+    },
+    generateStreamKey(){
+      return new Promise((resolve, reject) => {
+        const decoded = jwt.verify(localStorage.getItem('token'), 'secret')
+        axios({
+          url: backUrl + 'streamKey/generate',
+          method: 'POST',
+          data: {
+            userId: decoded.userId
+          }
+        })
+        .then(resp => {
+          resolve(resp)
+        })
+        .catch(err => {
+          reject(err.response.data.message)
+        })
+      })
+    },
+    getStreamKey(){
+      return new Promise((resolve, reject) => {
+        const decoded = jwt.verify(localStorage.getItem('token'), 'secret')
+        axios({
+          url: backUrl + 'streamKey/' + decoded.userId,
+          method: 'GET'
+        })
+        .then(resp => {
+          resolve(resp)
+        })
+        .catch(err => {
+          reject(err)
+        })
+      })
+    },
+    createVideo({commit}, data){
+      return new Promise((resolve, reject) => {
+        axios({
+          url: backUrl + 'video/create',
+          method: 'POST',
+          data: data
+        })
+        .then(resp => {
+          resolve(resp)
+        })
+        .catch(err => {
+          reject(err)
+        })
+      })
+    },
+    changeVideoStatus({}, data){
+      return new Promise((resolve, reject) => {
+        axios({
+          url: backUrl +'video/update',
+          data: data,
+          method: 'POST'
+        })
+        .then(resp => {
+          resolve(resp)
+        })
+        .catch(err => {
+          reject(err)
+        })
+      })
     }
   },
   getters: {
@@ -202,6 +266,7 @@ export default new Vuex.Store({
     nginx: state => state.nginxStatus,
     opencast: state => state.opencastStatus,
     backend: state => state.backStatus,
+    obsStatus: state => state.socket.isConnected,
     statusLoading: state => state.statusLoading
   }
 })
