@@ -103,6 +103,7 @@ export default {
                     'request-type': 'StartRecording',
                     'message-id': '3'
                 })
+                this.$options.sockets.onmessage = (data) => console.log(data)
             } else {
                 console.log("No hay título")
             }

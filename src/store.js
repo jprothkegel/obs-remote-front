@@ -5,9 +5,9 @@ import jwt from 'jsonwebtoken'
 
 Vue.use(Vuex)
 
-const backUrl = 'http://192.168.0.82:3000/'
-const opencastUrl = 'http://192.168.0.67:8080'
-const nginxUrl = 'http://192.168.0.82'
+const backUrl = 'http://200.1.17.128:3000/'
+const opencastUrl = 'http://opencast.elo.utfsm.cl'
+const nginxUrl = 'http://200.1.17.128'
 
 export default new Vuex.Store({
   state: {

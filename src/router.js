@@ -14,7 +14,8 @@ let router =  new Router({
     {
       path: '/',
       name: 'home',
-      component: Home
+      component: Home,
+      redirect: '/obs'
     },
     {
       path: '/about',
