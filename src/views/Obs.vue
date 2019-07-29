@@ -1,6 +1,6 @@
 <template>
     <v-layout align-center justify-center class="mt-4">
-        <v-flex xs10 sm8 md6 lg4>
+        <v-flex xs10 sm9 md8 lg7 xl6>
             <v-card class="elevation-10 mx-auto round-card">
                 <v-card-title class="justify-center">
                     Interactuar con OBS
@@ -25,19 +25,19 @@
                         <v-form>
                             <v-container>
                                 <v-layout row wrap>
-                                    <v-flex xs12 sm6>
+                                    <v-flex xs12 sm4>
                                         <v-text-field color="green" label="Título" v-model="metadata.title" required></v-text-field>
                                     </v-flex>
-                                    <v-flex xs12 sm6>
+                                    <v-flex xs12 sm4>
                                         <v-text-field color="green" label="Descripción" v-model="metadata.description"></v-text-field>
                                     </v-flex>
-                                    <v-flex xs12 sm6>
+                                    <v-flex xs12 sm4>
                                         <v-text-field color="green" label="Idioma" v-model="metadata.language"></v-text-field>
                                     </v-flex>
-                                    <v-flex xs12 sm6>
-                                        <v-text-field color="green" label="Licencia" v-model="metadata.license"></v-text-field>
+                                    <v-flex xs12 sm4>
+                                       <v-select v-model="metadata.license" color="green" label="Licencia" :items="licenses"></v-select>
                                     </v-flex>
-                                    <v-flex xs12 sm6>
+                                    <v-flex xs12 sm4>
                                         <v-text-field color="green" label="Ponente" v-model="metadata.creator" hint="Separar con comas"></v-text-field>
                                     </v-flex>
                                 </v-layout>
@@ -46,13 +46,25 @@
                     </v-card>
 
                     <v-divider class="mt-2 mb-2"></v-divider>
-                    <v-layout row wrap justify-center align-center v-if="this.streaming != true">
+                    <v-layout row wrap justify-center="" align-center="" v-if="this.getStatus">
+                         <v-flex xs12 class="text-xs-center">
+                            <v-btn color="#48b400" block outline round @click="getSourcesScreenshots">Obtener fuentes</v-btn>
+                        </v-flex>
+                        <v-flex xs6 class="text-xs-center">
+                            <v-img class="round-img" aspect-ratio="1.5" :src="this.sourceImage2" />
+                        </v-flex>
+                        <v-flex xs6 class="text-xs-center">
+                            <v-img class="round-img" aspect-ratio="1.5" :src="this.sourceImage1" />
+                        </v-flex>
+                    </v-layout>
+
+                    <v-layout row wrap justify-center align-center v-if="this.streaming != true">   
                         <v-flex xs12 class="text-xs-center">
-                            <v-btn outline round color="#48b400" v-if="this.getStatus" icon>
-                                <v-icon>play_arrow</v-icon>
+                            <v-btn large outline round color="#48b400" v-if="this.getStatus" icon>
+                                <v-icon>fiber_manual_record</v-icon>
                             </v-btn>
-                            <v-btn disabled outline round color="#48b400" v-else icon>
-                                <v-icon>play_arrow</v-icon>
+                            <v-btn large disabled outline round color="#48b400" v-else icon>
+                                <v-icon>fiber_manual_record</v-icon>
                             </v-btn>
                         </v-flex>
                         <v-flex xs1></v-flex>
@@ -60,7 +72,7 @@
 
                     <v-layout row wrap justify-center align-center v-else>
                         <v-flex xs12 class="text-xs-center">
-                            <v-btn outline round color="error" icon>
+                            <v-btn large outline round color="error" icon>
                                 <v-icon>stop</v-icon>
                                 <div class="ringring2"></div>
                             </v-btn>
@@ -75,10 +87,13 @@
 
                     <v-btn @click="getStreamingStatus">get status</v-btn>
                     <p> {{getStreamingStatus2}} </p>
-
+                    
                     <v-divider class="mt-2 mb-2"></v-divider>
                 </v-card-text>
             </v-card>
+            <v-snackbar v-model="snackbar" :color="snackColor" :timeout=4000>
+                {{snackText}}
+            </v-snackbar>
         </v-flex>
     </v-layout>
 </template>
@@ -96,10 +111,48 @@ export default {
                 license: '',
                 creator: []
             },
-            streaming: false
+            streaming: false,
+            sourceImage1: '',
+            sourceImage2: '',
+            snackbar: false,
+            snackColor: '',
+            snackText: '',
+            licenses: ["Todos los derechos reservados", "CC BY", "CC BY-SA", "CC BY-ND", "CC BY-NC", "CC BY-NC-SA", "CC BY-NC-ND", "CC0"]
         }
     },
     methods: {
+        getSourcesScreenshots(){
+            this.$socket.sendObj({
+                'request-type': 'TakeSourceScreenshot',
+                'message-id': '11',
+                'sourceName': 'screen',
+                'embedPictureFormat': 'png',
+                'height': 500
+            })
+            this.$options.sockets.onmessage = (data) => {
+                if(JSON.parse(data.data).img != undefined && JSON.parse(data.data).sourceName === 'screen'){
+                    this.sourceImage1 = JSON.parse(data.data).img
+                    this.snackbar=true
+                    this.snackText="Fuente cargada con éxito"
+                    this.snackColor="success"
+                } 
+            }
+            this.$socket.sendObj({
+                'request-type': 'TakeSourceScreenshot',
+                'message-id': '12',
+                'sourceName': 'multi',
+                'embedPictureFormat': 'png',
+                'height': 500
+            })
+            this.$options.sockets.onmessage = (data) => {
+                if(JSON.parse(data.data).img != undefined && JSON.parse(data.data).sourceName === 'multi'){
+                    this.sourceImage2 = JSON.parse(data.data).img
+                    this.snackbar=true
+                    this.snackText="Fuente cargada con éxito"
+                    this.snackColor="success"
+                }
+            }  
+        },
         getStreamingStatus(){
             this.$socket.sendObj({
                 'request-type': 'GetStreamingStatus',
@@ -253,5 +306,9 @@ export default {
     0% {-webkit-transform: scale(0.1, 0.1); opacity: 0.0;}
     50% {opacity: 1.0;}
     100% {-webkit-transform: scale(1.2,1.2); opacity: 0.0;}
+}
+
+.round-img {
+    border-radius: 8px;
 }
 </style>
