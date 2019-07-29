@@ -92,6 +92,17 @@ export default {
     }
   },
   created(){
+    this.$http.interceptors.response.use(undefined, err => {
+      return new Promise((resolve, reject) => {
+        if(err.response.status === 401 && err.response.config && !err.response.config.__isRetryRequest){
+          this.$store.dispatch('logout')
+          .then(() => {
+            this.$router.push('/login')
+          })
+        }
+        throw err
+      })
+    })
     this.$store.dispatch('getNginxStatus')
     this.$store.dispatch('getOpencastStatus')
     this.$store.dispatch('getBackStatus')

@@ -60,7 +60,7 @@
 
                     <v-layout row wrap justify-center align-center v-if="this.streaming != true">   
                         <v-flex xs12 class="text-xs-center">
-                            <v-btn large outline round color="#48b400" v-if="this.getStatus" icon>
+                            <v-btn @click="createVideo(streamKeyId, metadata, 'Active', 'SR')" large outline round color="#48b400" v-if="this.getStatus" icon>
                                 <v-icon>fiber_manual_record</v-icon>
                             </v-btn>
                             <v-btn large disabled outline round color="#48b400" v-else icon>
@@ -72,22 +72,12 @@
 
                     <v-layout row wrap justify-center align-center v-else>
                         <v-flex xs12 class="text-xs-center">
-                            <v-btn large outline round color="error" icon>
+                            <v-btn @click="stopStreamingRecording" large outline round color="error" icon>
                                 <v-icon>stop</v-icon>
                                 <div class="ringring2"></div>
                             </v-btn>
                         </v-flex>
                     </v-layout>
-                    
-                    <v-btn v-if="this.getStatus" @click="createVideo(streamKeyId,metadata,'Active', 'SR')" outline block round color="info">Transmitir & Grabar </v-btn>
-                    
-                    <v-btn v-else disabled outline round block color="info">Transmitir & Grabar </v-btn><v-spacer></v-spacer>
-                    <v-btn v-if="this.getStatus" @click="stopStreamingRecording" outline round block color="error">Detener</v-btn>
-                    <v-btn v-else disabled outline round block color="error">Detener</v-btn>
-
-                    <v-btn @click="getStreamingStatus">get status</v-btn>
-                    <p> {{getStreamingStatus2}} </p>
-                    
                     <v-divider class="mt-2 mb-2"></v-divider>
                 </v-card-text>
             </v-card>
@@ -159,7 +149,6 @@ export default {
                 'message-id': '10',
             })
             this.$options.sockets.onmessage = (data) => {
-                console.log("DATA2: ",JSON.parse(data.data))
                 this.streaming = JSON.parse(data.data).streaming
             }
         },
@@ -182,15 +171,16 @@ export default {
                     'message-id': '1',
                     'stream': {
                         'settings': {
+                            'server': 'http://200.1.17.128/live',
                             'key': this.streamKeyData
-                        }
+                        },
+                        'type' : 'rtmp_custom'
                     }
                 })
                 this.$socket.sendObj({
                     'request-type': 'StartRecording',
                     'message-id': '3'
                 })
-                this.$options.sockets.onmessage = (data) => console.log(data)
             } else {
                 console.log("No hay título")
             }
@@ -224,9 +214,16 @@ export default {
             })
             .then(resp => {
                 this.startStreamingRecording()
+                this.snackbar = true
+                this.snackColor = "success"
+                this.snackText = "El vídeo fue creado con éxito"
+                this.getStreamingStatus()
             })
             .catch(err => {
                 console.log(err)
+                this.snackbar = true
+                this.snackColor = "error"
+                this.snackText = "Hubo un error al crearse el vídeo"
             })
         }
     },
